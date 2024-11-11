@@ -17,10 +17,6 @@ app.use(cors({
 }))
 app.use(bodyParser.json())
 
-// app.use(express.static('build'));
-// app.use((req, res, next) => {
-//     res.sendFile(path.join(__dirname, 'build', 'index.html'));
-// });
 
 
 // Here we Use This To Store The Clients That Joined a Room And For Each Room A New Object of userSocketMap Store That Users
@@ -55,7 +51,7 @@ function getAllConnectedClients(roomId) {
 
 io.on('connection', (socket) => {
     // socket object conatins all the Details of client (socket) that is connected
-    console.log('socket connected', socket.id);
+    // console.log('socket connected', socket.id);
 
     // Listening the Join Event Triggerd From Client 
     socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
@@ -114,7 +110,7 @@ io.on('connection', (socket) => {
 
         // socket.in(roomId) means it works As broadcast and Send the data Excluding 
         //Self
-        console.log(inputData);
+        
         socket.in(roomId).emit(ACTIONS.INPUT_CNG, { inputData });
     });
     socket.on(ACTIONS.OUTPUT_CNG, ({ roomId, outputData }) => {
@@ -133,9 +129,8 @@ io.on('connection', (socket) => {
     socket.on(ACTIONS.SYNC_CODE, ({ socketId, code, inputChange, outputChange }) => {
         // io.to() means From all the Socket Update this Specific Soket or send the data to specific Socket only
         io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
-        io.to(socketId).emit(ACTIONS.SYNC_INPUT_OUTPUT, {inputChange, outputChange });
+        io.to(socketId).emit(ACTIONS.SYNC_INPUT_OUTPUT, { inputChange, outputChange });
     });
-
 
 
     // Now Apply The Events On Each Socket like If its Gets Disconnect then update Frontend and Other Connected users etc 
@@ -163,8 +158,8 @@ io.on('connection', (socket) => {
     });
 });
 app.post('/compile', async (req, res) => {
-    const { language, code, input,version } = req.body;
-    console.log(language, code, input)
+    const { language, code, input, version } = req.body;
+  
     if (!code) {
         return res.status(400).json({ error: 'Code is required' });
     }
@@ -183,7 +178,7 @@ app.post('/compile', async (req, res) => {
             stdin: input
 
         });
-        console.log(response.data)
+        
         res.json({
             output: response.data.run.output || 'No output returned',
             stderr: response.data.run.stderr || ''
@@ -193,6 +188,14 @@ app.post('/compile', async (req, res) => {
         res.status(500).json({ error: 'Compilation failed' });
     }
 });
+
+app.use(express.static('build'));
+app.use((req, res, next) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+
+
+
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
